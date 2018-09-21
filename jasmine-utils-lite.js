@@ -217,6 +217,32 @@
     }
   }
   
+  /**
+   * find spy calls with given argument
+   *
+   * @param {Spy} obj spy object
+   * @param {String} method spied method name.
+   * @return {Object} arg spied method argument
+   */
+  function getCallWithArg(obj, method, arg) {
+    var calls = obj[method].calls,
+      call,
+      callWithArg,
+      args,
+      i;
+  
+    for(i=0; i<calls.length; i++) {
+      call = calls[i];
+      args = call.args;
+      if(args.indexOf(arg) != -1) {
+        callWithArg = call;
+        break;
+      }
+    }
+    
+    return callWithArg;
+  }
+  
   function getMethodsToSkip(excepts) {
     var methodsToSkip = {};
     if(Array.isArray(excepts)) {
@@ -228,6 +254,27 @@
     
     return methodsToSkip;
   }
+  
+  function toBeEmpty() {
+    return (this.actual && (this.actual.length===0));
+  }
+  
+  function addMatchers(matchersPrototype) {
+    var parent = jasmine.getEnv().matchersClass,
+        newMatchersClass;
+    
+    newMatchersClass = function() {
+        parent.apply(this, arguments);
+    };
+    
+    jasmine.util.inherit(newMatchersClass, parent);
+    jasmine.Matchers.wrapInto_(matchersPrototype, newMatchersClass);
+    jasmine.getEnv().matchersClass = newMatchersClass;
+  }
+  
+  addMatchers({
+    toBeEmpty: toBeEmpty
+  });
 
    var spyUtils = {
     spyIf: spyIf,
@@ -236,7 +283,8 @@
     resetAll: resetAll,
     spyAllExcept: spyAllExcept,
     spyEach: spyEach,
-    spyAll: spyAll
+    spyAll: spyAll,
+    getCallWithArg : getCallWithArg
   };
 
   // Expose utility functions.
